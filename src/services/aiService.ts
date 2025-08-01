@@ -82,7 +82,7 @@ class AIService {
           "Gemini API key not configured, returning mock savings plan"
         );
         return `
-          **SaveSense Savings Plans**
+          **KaiaMate Savings Plans**
 
           Since I don't have access to your transaction data, here are our general savings plan options:
 
@@ -92,7 +92,7 @@ class AIService {
 
           Configure your GEMINI_API_KEY to get personalized savings recommendations based on your transaction history.
 
-          Best regards from SaveSense.
+          Best regards from KaiaMate.
         `;
       }
 

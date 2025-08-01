@@ -262,7 +262,7 @@ router.post("/savings-plan", async (req, res) => {
     if (!savingsPlan) {
       // Create fallback savings plan for empty wallets
       const fallbackPlan = `
-**SaveSense Savings Plans**
+**KaiaMate Savings Plans**
 
 Since you're new to Kaia Finance, here are our general savings plan options:
 
@@ -272,7 +272,7 @@ Since you're new to Kaia Finance, here are our general savings plan options:
 
 Start with a small amount and gradually increase as you become more comfortable with saving.
 
-Best regards from SaveSense.
+Best regards from KaiaMate.
       `;
 
       return res.json({
@@ -300,7 +300,7 @@ Best regards from SaveSense.
 
     // Create fallback savings plan for errors
     const fallbackPlan = `
-**SaveSense Savings Plans**
+**KaiaMate Savings Plans**
 
 We're here to help you start your savings journey! Here are our general savings plan options:
 
@@ -308,7 +308,7 @@ We're here to help you start your savings journey! Here are our general savings 
 2. **Frequency Plan:** Automate saving 5 KAIA every week or 20 KAIA every month
 3. **Spend & Save Plan:** Save 10% of every transaction you make
 
-Best regards from SaveSense.
+Best regards from KaiaMate.
     `;
 
     return res.json({
