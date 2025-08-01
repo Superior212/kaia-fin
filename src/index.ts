@@ -7,7 +7,6 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
-import morgan from "morgan";
 import { createServer } from "http";
 import { Server } from "socket.io";
 
@@ -52,7 +51,6 @@ app.use(
 );
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
-app.use(morgan("combined"));
 
 // Health check
 app.get("/health", (req, res) => {
