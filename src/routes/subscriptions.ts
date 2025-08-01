@@ -113,11 +113,11 @@ router.post("/pay", async (req, res) => {
     }
 
     // Validate token type
-    const validTokenTypes = ["KAIA", "USDT", "USDC"];
+    const validTokenTypes = ["KAIA", "USDT"];
     if (!validTokenTypes.includes(tokenType)) {
       return res.status(400).json({
         success: false,
-        error: "Invalid token type. Must be KAIA, USDT, or USDC",
+        error: "Invalid token type. Must be KAIA, or USDT ",
       });
     }
 
@@ -178,6 +178,27 @@ router.post("/verify", async (req, res) => {
     return res.status(500).json({
       success: false,
       error: "Payment verification failed",
+    });
+  }
+});
+
+/**
+ * GET /api/subscriptions/pricing/:serviceID
+ * Get real-time pricing for a specific service
+ */
+router.get("/pricing/:serviceID", async (req, res) => {
+  try {
+    const { serviceID } = req.params;
+    const pricing = await subscriptionService.getServicePricing(serviceID);
+    return res.json({
+      success: true,
+      data: pricing,
+    });
+  } catch (error) {
+    logger.error("Error fetching service pricing:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to fetch service pricing",
     });
   }
 });
