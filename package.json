@@ -50,7 +50,7 @@
     "@typescript-eslint/eslint-plugin": "^7.17.0",
     "@typescript-eslint/parser": "^7.17.0",
     "cross-env": "^10.0.0",
-    "eslint": "^9.32.0",
+    "eslint": "^8.56.0",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.3"
