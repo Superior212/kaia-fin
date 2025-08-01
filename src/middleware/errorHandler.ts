@@ -1,11 +1,11 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, ErrorRequestHandler } from "express";
 
 export interface AppError extends Error {
   statusCode?: number;
   isOperational?: boolean;
 }
 
-export const errorHandler = (
+export const errorHandler: ErrorRequestHandler = (
   error: AppError,
   req: Request,
   res: Response,
