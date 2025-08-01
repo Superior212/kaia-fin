@@ -95,7 +95,7 @@ export class WalletService {
   async getTransactionHistory(
     walletAddress: string,
     limit: number = 50
-  ): Promise<ITransaction[]> {
+  ): Promise<any[]> {
     try {
       // First check if we have cached transactions
       const cachedTransactions = await Transaction.find({
@@ -168,21 +168,105 @@ export class WalletService {
     limit: number = 50,
     fromBlock?: bigint,
     toBlock?: bigint
-  ): Promise<ITransaction[]> {
+  ): Promise<any[]> {
     try {
-      // This is a simplified implementation
-      // In production, you'd want to use a more robust method
-      // like using a blockchain indexer or multiple RPC calls
+      console.log(`Fetching real transactions for wallet ${walletAddress}`);
 
-      const transactions: ITransaction[] = [];
+      const latestBlock = await this.client.getBlockNumber();
+      const transactions: any[] = [];
 
-      // For now, return empty array - implement actual blockchain fetching
-      // This would involve:
-      // 1. Getting transaction receipts
-      // 2. Parsing transaction data
-      // 3. Categorizing transactions
-      // 4. Handling different token types
+      // Scan the last 100,000 blocks for transactions
+      const scanBlocks = 100000;
+      const endBlock = latestBlock;
+      const startBlock = endBlock - BigInt(scanBlocks);
 
+      console.log(
+        `Scanning blocks ${startBlock} to ${endBlock} for wallet ${walletAddress}`
+      );
+
+      // Get all transactions where the wallet is involved
+      for (
+        let blockNumber = startBlock;
+        blockNumber <= endBlock;
+        blockNumber++
+      ) {
+        try {
+          const block = await this.client.getBlock({
+            blockNumber: blockNumber,
+            includeTransactions: true,
+          });
+
+          if (block && block.transactions) {
+            for (const tx of block.transactions) {
+              if (typeof tx === "object" && tx.from && tx.to) {
+                // Check if wallet is sender or receiver
+                if (
+                  tx.from.toLowerCase() === walletAddress.toLowerCase() ||
+                  tx.to.toLowerCase() === walletAddress.toLowerCase()
+                ) {
+                  console.log(
+                    `Found transaction: ${tx.hash} from ${tx.from} to ${tx.to}`
+                  );
+
+                  const receipt = await this.client.getTransactionReceipt({
+                    hash: tx.hash,
+                  });
+
+                  // Determine transaction category based on addresses
+                  let category = "transfer";
+                  if (tx.to === "0x7C01A0aFd85Fef0D86F83559FB0a2ec683834Ce0") {
+                    category = "deposit";
+                  } else if (tx.from === walletAddress) {
+                    category = "send";
+                  } else if (tx.to === walletAddress) {
+                    category = "receive";
+                  }
+
+                  const transaction = {
+                    hash: tx.hash,
+                    from: tx.from,
+                    to: tx.to,
+                    value: tx.value.toString(),
+                    token: "0x0000000000000000000000000000000000000000", // Native KAIA token
+                    tokenSymbol: "KAIA",
+                    tokenDecimals: 18,
+                    gasUsed: receipt?.gasUsed?.toString() || "0",
+                    gasPrice: tx.gasPrice?.toString() || "0",
+                    blockNumber: Number(blockNumber),
+                    timestamp: new Date(Number(block.timestamp) * 1000),
+                    status: receipt?.status === 1 ? "confirmed" : "failed",
+                    walletAddress: walletAddress.toLowerCase(),
+                    category: category,
+                    tags: [],
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                  };
+
+                  transactions.push(transaction);
+
+                  // Limit the number of transactions to process
+                  if (transactions.length >= limit) {
+                    console.log(`Reached limit of ${limit} transactions`);
+                    break;
+                  }
+                }
+              }
+            }
+          }
+
+          // Add a small delay to avoid overwhelming the RPC
+          if (Number(blockNumber) % 1000 === 0) {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
+        } catch (blockError) {
+          console.log(`Error processing block ${blockNumber}:`, blockError);
+          continue;
+        }
+      }
+
+      console.log(
+        `Found ${transactions.length} real transactions for wallet ${walletAddress}`
+      );
       return transactions;
     } catch (error) {
       console.log("Failed to fetch transactions from blockchain:", error);
@@ -209,7 +293,7 @@ export class WalletService {
     }
 
     // Check for common patterns
-    if (tokenSymbol === "USDT" || tokenSymbol === "USDC") {
+    if (tokenSymbol === "USDT") {
       return "stablecoin";
     }
 

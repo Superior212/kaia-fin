@@ -80,6 +80,28 @@ router.post("/analyze", async (req, res) => {
       walletAddress
     );
 
+    // Check if this is a testnet wallet with no transactions
+    if (transactions.length === 0) {
+      return res.json({
+        analysis: {
+          insights: [
+            `This wallet (${walletAddress}) has no transaction history on the Kaia Kairos testnet.`,
+            "To get personalized insights, you'll need to perform some transactions on the testnet.",
+            "You can try depositing funds, making transfers, or using our savings features.",
+          ],
+          recommendations: [
+            "Connect to Kaia Kairos testnet in your wallet",
+            "Get some test KAIA tokens from the faucet",
+            "Try our savings features to generate transaction data",
+            "Make some test transactions to see analysis in action",
+          ],
+          summary: `Wallet Analysis: No transactions found on Kaia Kairos testnet. This is normal for new wallets or wallets that haven't been used on the testnet yet.`,
+          confidence: 90,
+        },
+        insightId: null,
+      });
+    }
+
     const analysisRequest: AIAnalysisRequest = {
       walletAddress,
       transactions: transactions.map((tx) => ({
@@ -225,7 +247,7 @@ router.post("/savings-plan", async (req, res) => {
       mostFrequentToken:
         Object.keys(mostFrequentToken).length > 0
           ? Object.entries(mostFrequentToken).sort(
-              ([, a], [, b]) => b - a
+              ([, a], [, b]) => (b as number) - (a as number)
             )[0][0]
           : "KAIA",
       transactionCount: transactions.length,

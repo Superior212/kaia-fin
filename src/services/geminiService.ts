@@ -126,54 +126,113 @@ export class GeminiService {
       });
 
       const prompt = `
-        Analyze the following wallet transaction data and provide financial insights:
+        Analyze the following wallet transaction data from the Kaia Kairos testnet and provide financial insights:
 
         Wallet Address: ${request.walletAddress}
         Analysis Type: ${request.analysisType}
         Transaction Count: ${request.transactions.length}
+        Network: Kaia Kairos Testnet (Chain ID: 1001)
 
         Transaction Data:
         ${JSON.stringify(request.transactions, null, 2)}
 
-        Please provide:
-        1. 3-5 key insights about spending patterns
-        2. 3-5 actionable recommendations
-        3. A brief summary of the analysis
-        4. Confidence level (0-100) based on data quality
+        Important Context:
+        - This is testnet data, so transactions are for testing purposes
+        - Token values may be test tokens (KAIA, USDT, etc.)
+        - Focus on patterns and behaviors rather than absolute values
+        - Provide insights that would be useful for real mainnet usage
 
-        Format your response as JSON:
-        {
-          "insights": ["insight1", "insight2", "insight3"],
-          "recommendations": ["rec1", "rec2", "rec3"],
-          "summary": "brief summary",
-          "confidence": 85
-        }
+        Please provide a well-formatted analysis with the following structure:
+
+        📊 Wallet Analysis Complete!
+
+        Key Insights:
+        • [Analyze spending patterns, transaction frequency, amounts, and behaviors]
+        • [Identify if the wallet is primarily sending or receiving]
+        • [Note any patterns in transaction timing or amounts]
+        • [Comment on interaction with DeFi protocols if applicable]
+
+        Recommendations:
+        • [Based on spending patterns, suggest savings strategies]
+        • [Recommend transaction frequency optimization]
+        • [Suggest ways to reduce gas costs if applicable]
+        • [Provide DeFi usage recommendations if relevant]
+
+        Summary:
+        [Brief summary of the analysis in 2-3 sentences focusing on actual transaction patterns]
+
+        Confidence Level: [0-100]% based on data quality and transaction count
+
+        Would you like me to help you with:
+        • Setting up savings goals
+        • Analyzing spending patterns
+        • Creating a financial plan
+
+        Important: Format your response as clean, readable text. Use bullet points (•) for lists, not asterisks (*). Do not include any JSON formatting, code blocks, or duplicate content. Keep the response concise and well-structured.
       `;
 
       const result = await model.generateContent(prompt);
       const response = result.response;
-      const text = response.text();
+      let text = response.text();
 
-      // Try to parse JSON response
-      try {
-        const parsed = JSON.parse(text);
-        return {
-          insights: parsed.insights || ["No insights available"],
-          recommendations: parsed.recommendations || [
-            "No recommendations available",
-          ],
-          summary: parsed.summary || "Analysis completed",
-          confidence: parsed.confidence || 50,
-        };
-      } catch (parseError) {
-        console.log("Failed to parse Gemini response as JSON, using fallback");
-        return {
-          insights: ["Analysis completed successfully"],
-          recommendations: ["Consider reviewing your spending patterns"],
-          summary: text.substring(0, 200) + "...",
-          confidence: 70,
-        };
+      // Clean up formatting issues
+      text = text
+        .replace(/\*\*\*/g, "•") // Replace asterisks with bullet points
+        .replace(/\*\*/g, "") // Remove double asterisks
+        .replace(/\*/g, "") // Remove single asterisks
+        .replace(/```json\n[\s\S]*?\n```/g, "") // Remove JSON code blocks
+        .replace(/```\n[\s\S]*?\n```/g, "") // Remove any code blocks
+        .replace(
+          /📊 Wallet Analysis Complete!\s*\n\s*📊 Wallet Analysis Complete!/g,
+          "📊 Wallet Analysis Complete!"
+        ) // Remove duplicate headers
+        .trim();
+
+      // Parse the formatted text to extract insights and recommendations
+      const lines = text.split("\n");
+      const insights: string[] = [];
+      const recommendations: string[] = [];
+      let summary = "";
+      let currentSection = "";
+
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (trimmedLine.includes("Key Insights:")) {
+          currentSection = "insights";
+        } else if (trimmedLine.includes("Recommendations:")) {
+          currentSection = "recommendations";
+        } else if (trimmedLine.includes("Summary:")) {
+          currentSection = "summary";
+        } else if (
+          trimmedLine.startsWith("•") &&
+          currentSection === "insights"
+        ) {
+          insights.push(trimmedLine.substring(1).trim());
+        } else if (
+          trimmedLine.startsWith("•") &&
+          currentSection === "recommendations"
+        ) {
+          recommendations.push(trimmedLine.substring(1).trim());
+        } else if (
+          currentSection === "summary" &&
+          trimmedLine &&
+          !trimmedLine.includes("Confidence Level:")
+        ) {
+          summary += trimmedLine + " ";
+        }
       }
+
+      // Return the properly structured response
+      return {
+        insights:
+          insights.length > 0 ? insights : ["Analysis completed successfully"],
+        recommendations:
+          recommendations.length > 0
+            ? recommendations
+            : ["Consider reviewing your spending patterns"],
+        summary: summary.trim() || "Analysis completed successfully",
+        confidence: 85,
+      };
     } catch (error) {
       console.log("Error analyzing wallet data with Gemini:", error);
       return {
@@ -224,7 +283,7 @@ export class GeminiService {
         .join("\n");
 
       const prompt = `
-        You are a helpful financial AI assistant for Kaia Finance. You help users with:
+        You are a helpful financial AI assistant for Kaia Finance on the Kaia Kairos testnet. You help users with:
         - Financial advice and insights
         - Wallet analysis and spending patterns
         - Savings recommendations
@@ -232,11 +291,12 @@ export class GeminiService {
 
         Context: ${request.context || "General financial assistance"}
         Wallet Address: ${request.walletAddress || "Not provided"}
+        Network: Kaia Kairos Testnet (Chain ID: 1001)
 
         Conversation History:
         ${conversationHistory}
 
-        Please provide a helpful, friendly response. If asked about wallet analysis, mention that detailed analysis is available through the wallet analysis feature.
+        Please provide a helpful, friendly response. If asked about wallet analysis, mention that detailed analysis is available through the wallet analysis feature. Remember that this is testnet data, so focus on patterns and behaviors rather than absolute values.
       `;
 
       const result = await model.generateContent(prompt);
