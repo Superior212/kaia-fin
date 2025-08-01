@@ -2,14 +2,15 @@
   "name": "kaia-finance-backend",
   "version": "1.0.0",
   "description": "Backend API for Kaia Finance with AI integration",
-  "main": "dist/index.js",
+  "main": "index.js",
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "tsc",
-   "start": "node dist/index.js",
-    "dev": "cross-env NODE_OPTIONS='--max-old-space-size=2048' ts-node src/index.ts"
+    "start": "node build/index.js",
+    "dev": "cross-env NODE_OPTIONS='--max-old-space-size=2048' ts-node src/index.ts",
+    "test": "nodemon src/index.ts",
+    "build": "tsc"
   },
   "keywords": [
     "kaia",
