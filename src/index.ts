@@ -13,7 +13,6 @@ import { Server } from "socket.io";
 
 import { connectDB } from "./config/database";
 import { errorHandler } from "./middleware/errorHandler";
-import { rateLimiter } from "./middleware/rateLimiter";
 
 // Import routes
 import aiRoutes from "./routes/ai";
@@ -54,7 +53,6 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("combined"));
-app.use(rateLimiter);
 
 // Health check
 app.get("/health", (req, res) => {
